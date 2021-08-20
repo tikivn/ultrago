@@ -7,7 +7,7 @@ import (
 
 	"github.com/ashwanthkumar/slack-go-webhook"
 
-	"github.com/tikivn/ultrago/env"
+	"github.com/tikivn/ultrago/xenv"
 	"github.com/tikivn/ultrago/xlogaff"
 )
 
@@ -20,27 +20,27 @@ type SlackAddress struct {
 func (s SlackAddress) SendSlackMessage(ctx context.Context, message string) {
 	ctx, logger := xlogaff.GetLogger(ctx)
 	logger.Info(message)
-	text := fmt.Sprintf("[%s]\n%s", strings.ToUpper(env.ENV), message)
+	text := fmt.Sprintf("[%s]\n%s", strings.ToUpper(xenv.ENV), message)
 	s.slackAlert(ctx, text)
 }
 
 func (s SlackAddress) SendSlackError(ctx context.Context, message string) {
 	ctx, logger := xlogaff.GetLogger(ctx)
 	logger.Error(message)
-	text := fmt.Sprintf("[%s][ERROR]\n%s", strings.ToUpper(env.ENV), message)
+	text := fmt.Sprintf("[%s][ERROR]\n%s", strings.ToUpper(xenv.ENV), message)
 	s.slackAlert(ctx, text)
 }
 
 func (s SlackAddress) SendSlackWarn(ctx context.Context, message string) {
 	ctx, logger := xlogaff.GetLogger(ctx)
 	logger.Warn(message)
-	text := fmt.Sprintf("[%s][WARN]\n%s", strings.ToUpper(env.ENV), message)
+	text := fmt.Sprintf("[%s][WARN]\n%s", strings.ToUpper(xenv.ENV), message)
 	s.slackAlert(ctx, text)
 }
 
 func (s SlackAddress) slackAlert(ctx context.Context, message string) {
 	ctx, logger := xlogaff.GetLogger(ctx)
-	if env.SLACK_WEBHOOK_URL != "" {
+	if xenv.SLACK_WEBHOOK_URL != "" {
 		payload := slack.Payload{
 			Text:        message,
 			Username:    s.Username,
@@ -48,7 +48,7 @@ func (s SlackAddress) slackAlert(ctx context.Context, message string) {
 			IconEmoji:   s.IconEmoji,
 			Attachments: nil,
 		}
-		err := slack.Send(env.SLACK_WEBHOOK_URL, "", payload)
+		err := slack.Send(xenv.SLACK_WEBHOOK_URL, "", payload)
 		if len(err) > 0 {
 			logger.Errorf("slack send errors: %s", err)
 			return

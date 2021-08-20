@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 
-	"github.com/tikivn/ultrago/env"
+	"github.com/tikivn/ultrago/xenv"
 	"github.com/tikivn/ultrago/xlogaff"
 )
 
@@ -16,8 +16,8 @@ var telegramToken string
 var channels []string
 
 func init() {
-	telegramToken = env.TELEGRAM_BOT_TOKEN
-	channelStr := env.TELEGRAM_CHANNELS
+	telegramToken = xenv.TELEGRAM_BOT_TOKEN
+	channelStr := xenv.TELEGRAM_CHANNELS
 	if channelStr != "" {
 		channels = strings.Split(channelStr, ",")
 	}
