@@ -7,8 +7,8 @@ import (
 
 	"github.com/ashwanthkumar/slack-go-webhook"
 
-	"tikivn/ultrago/env"
-	"tikivn/ultrago/logaff"
+	"github.com/tikivn/ultrago/env"
+	"github.com/tikivn/ultrago/logaff"
 )
 
 type SlackAddress struct {

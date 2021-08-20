@@ -5,10 +5,11 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"tikivn/ultrago/env"
-	"tikivn/ultrago/logaff"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
+
+	"github.com/tikivn/ultrago/env"
+	"github.com/tikivn/ultrago/logaff"
 )
 
 var telegramToken string
