@@ -9,7 +9,7 @@ import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 
 	"github.com/tikivn/ultrago/env"
-	"github.com/tikivn/ultrago/logaff"
+	"github.com/tikivn/ultrago/xlogaff"
 )
 
 var telegramToken string
@@ -24,7 +24,7 @@ func init() {
 }
 
 func SendTeleMessage(ctx context.Context, message string) {
-	ctx, logger := logaff.GetLogger(ctx)
+	ctx, logger := xlogaff.GetLogger(ctx)
 
 	if telegramToken == "" {
 		logger.Errorf("empty telegram token")
