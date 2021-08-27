@@ -7,48 +7,53 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
+	"github.com/sirupsen/logrus"
+	env_parser "github.com/tikivn/ultrago/u_env_parser"
 	logaff "github.com/tikivn/ultrago/u_logaff"
+	"moul.io/http2curl"
 )
 
-func NewHttpClient(timeout time.Duration) *HttpClient {
+func NewHttpClient(httpExecutor HttpExecutor, timeout time.Duration) *HttpClient {
 	return &HttpClient{
-		retry: 0,
-		client: &http.Client{
-			Timeout: timeout,
-		},
+		retry:        0,
+		timeout:      timeout,
+		httpExecutor: httpExecutor,
 	}
 }
 
-func NewRetryHttpClient(timeout time.Duration, retry uint64) *HttpClient {
+func NewRetryHttpClient(httpExecutor HttpExecutor, timeout time.Duration, retry uint64) *HttpClient {
 	return &HttpClient{
-		retry: retry,
-		client: &http.Client{
-			Timeout: timeout,
-		},
+		retry:        retry,
+		timeout:      timeout,
+		httpExecutor: httpExecutor,
 	}
 }
 
 type HttpClient struct {
-	url     string
-	headers map[string]string
-	params  interface{}
-	retry   uint64
+	url          string
+	headers      map[string]string
+	params       interface{}
+	retry        uint64
+	timeout      time.Duration
+	httpExecutor HttpExecutor
+}
 
-	client *http.Client
+func (c *HttpClient) URL() string {
+	return c.url
 }
 
 func (c *HttpClient) WithUrl(uri string, params map[string]string) *HttpClient {
 	if params != nil {
 		requestParams := url.Values{}
 		for key, value := range params {
-			requestParams.Set(key, value)
+			if value != "" {
+				requestParams.Set(key, value)
+			}
 		}
 		c.url = fmt.Sprintf("%s?%s", uri, requestParams.Encode())
 	} else {
@@ -59,7 +64,7 @@ func (c *HttpClient) WithUrl(uri string, params map[string]string) *HttpClient {
 
 func (c *HttpClient) WithHeaders(headers map[string]string) *HttpClient {
 	if c.headers == nil {
-		c.headers = make(map[string]string)
+		c.headers = make(map[string]string, 0)
 	}
 	for key, value := range headers {
 		c.headers[key] = value
@@ -83,6 +88,8 @@ func (c *HttpClient) WithBearerAuth(token string) *HttpClient {
 }
 
 func (c *HttpClient) Do(ctx context.Context, method string) ([]byte, error) {
+	ctx, logger := logaff.GetLogger(ctx)
+
 	var buffer *bytes.Buffer
 	if c.params != nil {
 		payload, err := json.Marshal(c.params)
@@ -99,28 +106,75 @@ func (c *HttpClient) Do(ctx context.Context, method string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	if c.headers == nil {
+		c.headers = make(map[string]string, 0)
+	}
+	c.headers["Content-Type"] = "application/json"
 	for key, value := range c.headers {
 		r.Header.Set(key, value)
 	}
 
-	return c.execute(r)
+	if env_parser.IsDev() {
+		command, _ := http2curl.GetCurlCommand(r)
+		logger.Info(command.String())
+	}
+
+	statusCode, resp, err := c.httpExecutor.Execute(r, c.timeout, c.retry)
+
+	logger.WithFields(logrus.Fields{
+		"url":     c.url,
+		"payload": c.params,
+		"header":  c.headers,
+	}).Infof("call api with code=%d res=%s, err=%v", statusCode, string(resp), err)
+	return resp, err
 }
 
 func (c *HttpClient) DoFormEncoding(ctx context.Context, method string) ([]byte, error) {
+	ctx, logger := logaff.GetLogger(ctx)
+
 	var buffer *strings.Reader
 	if c.params != nil {
-		buffer = strings.NewReader(c.params.(string))
+		switch c.params.(type) {
+		case map[string]string:
+			payload := url.Values{}
+			for key, value := range c.params.(map[string]string) {
+				payload.Set(key, value)
+			}
+			buffer = strings.NewReader(payload.Encode())
+		case url.Values:
+			buffer = strings.NewReader(c.params.(url.Values).Encode())
+		case string:
+			buffer = strings.NewReader(c.params.(string))
+		default:
+			return nil, fmt.Errorf("invalid payload field type")
+		}
 	}
 
 	r, err := http.NewRequestWithContext(ctx, method, c.url, buffer)
 	if err != nil {
 		return nil, err
 	}
+	if c.headers == nil {
+		c.headers = make(map[string]string, 0)
+	}
+	c.headers["Content-Type"] = "application/x-www-form-urlencoded"
 	for key, value := range c.headers {
 		r.Header.Set(key, value)
 	}
 
-	return c.execute(r)
+	if env_parser.IsDev() {
+		command, _ := http2curl.GetCurlCommand(r)
+		logger.Info(command.String())
+	}
+
+	statusCode, resp, err := c.httpExecutor.Execute(r, c.timeout, c.retry)
+
+	logger.WithFields(logrus.Fields{
+		"url":     c.url,
+		"payload": c.params,
+		"header":  c.headers,
+	}).Infof("call api with code=%d res=%s, err=%v", statusCode, string(resp), err)
+	return resp, err
 }
 
 func (c *HttpClient) DoFormMultipart(ctx context.Context) ([]byte, error) {
@@ -132,29 +186,7 @@ func (c *HttpClient) DoFormMultipart(ctx context.Context) ([]byte, error) {
 		r.Header.Set(key, value)
 	}
 
-	return c.execute(r)
-}
-
-func (c *HttpClient) execute(r *http.Request) ([]byte, error) {
-	var res []byte
-	op := func() error {
-		httpRes, err := c.client.Do(r)
-		if err != nil {
-			return err
-		}
-		res, err = ioutil.ReadAll(httpRes.Body)
-		if httpRes.StatusCode > 299 {
-			return fmt.Errorf("non 2xx status code return: code %v", httpRes.StatusCode)
-		}
-		return err
-	}
-
-	retry := backoff.WithContext(backoff.WithMaxRetries(backoff.NewConstantBackOff(50*time.Millisecond), c.retry), r.Context())
-	err := backoff.Retry(op, retry)
-	if err != nil {
-		logger := logaff.GetNewLogger()
-		logger.Errorf("%s, response data: %s", err.Error(), string(res))
-		return nil, err
-	}
-	return res, nil
+	_, resp, err := c.httpExecutor.Execute(r, c.timeout, c.retry)
+	// comment because only use for upload image to cdn, will consider in the feature
+	return resp, err
 }

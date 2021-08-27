@@ -7,8 +7,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-
-	"github.com/tikivn/ultrago/xlogaff"
+	logaff "github.com/tikivn/ultrago/u_logaff"
 )
 
 func NewDefaultHttpExecutor() HttpExecutor {
@@ -17,8 +16,9 @@ func NewDefaultHttpExecutor() HttpExecutor {
 
 type httpExecutor struct{}
 
-// Execute only use if you don't have prometheus or logging
+// only use if you don't have prometheus or logging
 func (c *httpExecutor) Execute(r *http.Request, timeout time.Duration, retry uint64) (int, []byte, error) {
+	logger := logaff.GetNewLogger()
 	var res []byte
 	var statusCode int
 	op := func() error {
@@ -45,7 +45,6 @@ func (c *httpExecutor) Execute(r *http.Request, timeout time.Duration, retry uin
 	retryFn := backoff.WithContext(backoff.WithMaxRetries(backoff.NewConstantBackOff(50*time.Millisecond), retry), r.Context())
 	err := backoff.Retry(op, retryFn)
 	if err != nil {
-		logger := x_logaff.GetNewLogger()
 		logger.Errorf("%s, response data: %s", err.Error(), string(res))
 		return statusCode, nil, err
 	}

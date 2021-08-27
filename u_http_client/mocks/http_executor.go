@@ -4,20 +4,19 @@ import (
 	"net/http"
 	"time"
 
-	"moul.io/http2curl"
-
-	"github.com/tikivn/ultrago/u_http_client"
+	http_client "github.com/tikivn/ultrago/u_http_client"
 	logaff "github.com/tikivn/ultrago/u_logaff"
+	"moul.io/http2curl"
 )
 
-func NewHttpExecutor() u_http_client.HttpExecutor {
+func NewHttpExecutor() http_client.HttpExecutor {
 	return &mockHttpExecutor{
 		res: make(map[string][]byte, 0),
 		err: make(map[string]error, 0),
 	}
 }
 
-func NewHttpExecutorWithRes(mockRes map[string][]byte, mockErr map[string]error) u_http_client.HttpExecutor {
+func NewHttpExecutorWithRes(mockRes map[string][]byte, mockErr map[string]error) http_client.HttpExecutor {
 	executor := &mockHttpExecutor{
 		res: make(map[string][]byte, 0),
 		err: make(map[string]error, 0),
@@ -37,7 +36,7 @@ type mockHttpExecutor struct {
 }
 
 func (svc *mockHttpExecutor) Execute(r *http.Request, timeout time.Duration, retry uint64) (int, []byte, error) {
-	logger := logaff.GetNewLogger()
+	_, logger := logaff.GetLogger(r.Context())
 	command, err := http2curl.GetCurlCommand(r)
 	if err != nil {
 		logger.Errorf("build curl command failed: %v", err)
