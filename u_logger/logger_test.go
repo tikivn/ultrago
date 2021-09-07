@@ -1,4 +1,4 @@
-package u_logaff
+package u_logger
 
 import (
 	"context"
@@ -13,7 +13,7 @@ type mockSession struct {
 	UserID string
 }
 
-func (s *mockSession) GetID() string {
+func (s *mockSession) GetSessionID() string {
 	if s != nil {
 		return s.ID
 	}
@@ -59,7 +59,7 @@ func TestGetLogger(t *testing.T) {
 		session := "session-id"
 		user := "user-id"
 
-		ctx := context.WithValue(context.Background(), sessionKey, &mockSession{
+		ctx := context.WithValue(context.Background(), LoggerTrackingKey, &mockSession{
 			ID:     session,
 			UserID: user,
 		})
@@ -83,7 +83,7 @@ func TestGetLogger(t *testing.T) {
 	t.Run("NotExistUserOnContext", func(t *testing.T) {
 		session := "session-id"
 
-		ctx := context.WithValue(context.Background(), sessionKey, &mockSession{
+		ctx := context.WithValue(context.Background(), LoggerTrackingKey, &mockSession{
 			ID: session,
 		})
 		ctx, logger := GetLogger(ctx)
@@ -99,7 +99,7 @@ func TestGetLogger(t *testing.T) {
 	t.Run("NotExistSessionOnContext", func(t *testing.T) {
 		user := "user-id"
 
-		ctx := context.WithValue(context.Background(), sessionKey, &mockSession{
+		ctx := context.WithValue(context.Background(), LoggerTrackingKey, &mockSession{
 			UserID: user,
 		})
 		ctx, logger := GetLogger(ctx)
@@ -197,13 +197,13 @@ func TestGetJSON(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetJSON(tt.args.value)
+			got, err := getJson(tt.args.value)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetJSON() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getJson() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("GetJSON() got = %v, want %v", got, tt.want)
+				t.Errorf("getJson() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

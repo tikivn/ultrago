@@ -1,4 +1,4 @@
-package u_logaff
+package u_logger
 
 import (
 	"context"
@@ -10,19 +10,7 @@ import (
 	"gorm.io/gorm/utils"
 )
 
-type GORMLogger struct {
-	Config                              GORMLoggerConfig
-	InfoStr, WarnStr, ErrStr            string
-	TraceStr, TraceErrStr, TraceWarnStr string
-}
-
-type GORMLoggerConfig struct {
-	SlowThreshold             time.Duration
-	IgnoreRecordNotFoundError bool
-	LogLevel                  gorm.LogLevel
-}
-
-func NewGORMLogger(config GORMLoggerConfig) gorm.Interface {
+func NewGORMLogger(config gorm.Config) gorm.Interface {
 	return &GORMLogger{
 		Config:       config,
 		InfoStr:      "%s\n[info] ",
@@ -34,8 +22,18 @@ func NewGORMLogger(config GORMLoggerConfig) gorm.Interface {
 	}
 }
 
+type GORMLogger struct {
+	Config       gorm.Config
+	InfoStr      string
+	WarnStr      string
+	ErrStr       string
+	TraceStr     string
+	TraceWarnStr string
+	TraceErrStr  string
+}
+
 func (g *GORMLogger) LogMode(level gorm.LogLevel) gorm.Interface {
-	return NewGORMLogger(GORMLoggerConfig{
+	return NewGORMLogger(gorm.Config{
 		SlowThreshold:             time.Second,
 		IgnoreRecordNotFoundError: true,
 		LogLevel:                  level,

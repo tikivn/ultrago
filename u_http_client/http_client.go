@@ -14,7 +14,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	env_parser "github.com/tikivn/ultrago/u_env_parser"
-	logaff "github.com/tikivn/ultrago/u_logaff"
+	"github.com/tikivn/ultrago/u_logger"
 	"moul.io/http2curl"
 )
 
@@ -88,7 +88,7 @@ func (c *HttpClient) WithBearerAuth(token string) *HttpClient {
 }
 
 func (c *HttpClient) Do(ctx context.Context, method string) ([]byte, error) {
-	ctx, logger := logaff.GetLogger(ctx)
+	ctx, logger := u_logger.GetLogger(ctx)
 
 	var buffer *bytes.Buffer
 	if c.params != nil {
@@ -130,7 +130,7 @@ func (c *HttpClient) Do(ctx context.Context, method string) ([]byte, error) {
 }
 
 func (c *HttpClient) DoFormEncoding(ctx context.Context, method string) ([]byte, error) {
-	ctx, logger := logaff.GetLogger(ctx)
+	ctx, logger := u_logger.GetLogger(ctx)
 
 	var buffer *strings.Reader
 	if c.params != nil {
