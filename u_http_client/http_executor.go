@@ -7,33 +7,40 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	logaff "github.com/tikivn/ultrago/u_logaff"
+	"github.com/tikivn/ultrago/u_logger"
 )
 
-func NewDefaultHttpExecutor() HttpExecutor {
+func NewHttpExecutor() HttpExecutor {
 	return &httpExecutor{}
 }
 
 type httpExecutor struct{}
 
-// only use if you don't have prometheus or logging
 func (c *httpExecutor) Execute(r *http.Request, timeout time.Duration, retry uint64) (int, []byte, error) {
-	logger := logaff.GetNewLogger()
+	ctx, logger := u_logger.GetLogger(r.Context())
+
 	var res []byte
 	var statusCode int
 	op := func() error {
 		client := &http.Client{
 			Timeout: timeout,
 		}
+		// todo move prometheus to ultrago
+		// start := time.Now()
 		httpRes, err := client.Do(r)
 		if err != nil {
 			return err
 		}
 
 		// Close the connection to reuse it (keep-alive connection)
-		defer httpRes.Body.Close()
+		defer func() {
+			statusCode = httpRes.StatusCode
+			httpRes.Body.Close()
+		}()
 
-		statusCode = httpRes.StatusCode
+		// setting.MetricOutgoingHttpRequest.
+		// 	WithLabelValues(fmt.Sprintf("%d", httpRes.StatusCode), r.Method, r.URL.Path, r.URL.Host).
+		// 	Observe(time.Since(start).Seconds())
 
 		res, err = ioutil.ReadAll(httpRes.Body)
 		if httpRes.StatusCode > 299 {
@@ -42,10 +49,10 @@ func (c *httpExecutor) Execute(r *http.Request, timeout time.Duration, retry uin
 		return err
 	}
 
-	retryFn := backoff.WithContext(backoff.WithMaxRetries(backoff.NewConstantBackOff(50*time.Millisecond), retry), r.Context())
+	retryFn := backoff.WithContext(backoff.WithMaxRetries(backoff.NewConstantBackOff(50*time.Millisecond), retry), ctx)
 	err := backoff.Retry(op, retryFn)
 	if err != nil {
-		logger.Errorf("%s, response data: %s", err.Error(), string(res))
+		logger.Errorf("%v, response data: %s", err, string(res))
 		return statusCode, nil, err
 	}
 	return statusCode, res, nil

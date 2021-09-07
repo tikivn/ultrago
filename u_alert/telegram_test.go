@@ -13,7 +13,7 @@ import (
 func TestTelegramImpl(t *testing.T) {
 	convey.FocusConvey("TestTelegramImpl", t, func() {
 		convey.Convey("TestTelegram_SendMessage", func() {
-			SendTeleMessage(context.Background(), "hello world")
+			Telegram().SendTeleMessage(context.Background(), "hello world")
 		})
 
 		convey.FocusConvey("TestTelegram_FormatMessage", func() {
@@ -40,7 +40,7 @@ Thanks team.`
 					"programId":      "111dee9c-9f46-4fc6-8c52-7b772f6f540a",
 				})
 			fmt.Println(message)
-			SendTeleMessage(context.Background(), message)
+			Telegram().SendTeleMessage(context.Background(), message)
 		})
 	})
 }

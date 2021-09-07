@@ -5,7 +5,7 @@ import (
 	"time"
 
 	http_client "github.com/tikivn/ultrago/u_http_client"
-	logaff "github.com/tikivn/ultrago/u_logaff"
+	"github.com/tikivn/ultrago/u_logger"
 	"moul.io/http2curl"
 )
 
@@ -36,7 +36,7 @@ type mockHttpExecutor struct {
 }
 
 func (svc *mockHttpExecutor) Execute(r *http.Request, timeout time.Duration, retry uint64) (int, []byte, error) {
-	_, logger := logaff.GetLogger(r.Context())
+	_, logger := u_logger.GetLogger(r.Context())
 	command, err := http2curl.GetCurlCommand(r)
 	if err != nil {
 		logger.Errorf("build curl command failed: %v", err)

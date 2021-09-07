@@ -2,45 +2,64 @@ package u_alert
 
 import (
 	"context"
+	"errors"
 	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	env "github.com/tikivn/ultrago/u_env"
-	logaff "github.com/tikivn/ultrago/u_logaff"
+	"github.com/tikivn/ultrago/u_env_parser"
+	"github.com/tikivn/ultrago/u_logger"
 )
 
-var telegramToken string
-var channels []string
+var (
+	telegramIns  *telegram
+	telegramOnce sync.Once
+)
 
-func init() {
-	telegramToken = env.TELEGRAM_BOT_TOKEN
-	channelStr := env.TELEGRAM_CHANNELS
-	if channelStr != "" {
-		channels = strings.Split(channelStr, ",")
+func Telegram() *telegram {
+	if telegramIns == nil {
+		telegramOnce.Do(func() {
+			telegramIns = &telegram{
+				token:    u_env_parser.GetString("TELEGRAM_BOT_TOKEN", ""),
+				channels: u_env_parser.GetArray("TELEGRAM_CHANNELS", ",", nil),
+			}
+		})
 	}
+	return telegramIns
 }
 
-func SendTeleMessage(ctx context.Context, message string) {
-	ctx, logger := logaff.GetLogger(ctx)
+type telegram struct {
+	token    string
+	channels []string
+}
 
-	if telegramToken == "" {
-		logger.Errorf("empty telegram token")
-		return
-	} else if len(channels) == 0 {
-		logger.Errorf("empty list channels")
+func (t telegram) Validate() error {
+	if t.token == "" {
+		return errors.New("empty telegram token")
+	}
+	if len(t.channels) == 0 || t.channels[0] == "" {
+		return errors.New("empty telegram channels")
+	}
+	return nil
+}
+
+func (t telegram) SendTeleMessage(ctx context.Context, message string) {
+	ctx, logger := u_logger.GetLogger(ctx)
+	err := t.Validate()
+	if err != nil {
+		logger.Errorf(err.Error())
 		return
 	}
 
-	bot, err := tgbotapi.NewBotAPI(telegramToken)
+	bot, err := tgbotapi.NewBotAPI(t.token)
 	if err != nil {
 		logger.Errorf("fail to connect to telegram: %v", err)
 		return
 	}
 
 	var wg sync.WaitGroup
-	for _, channel := range channels {
+	for idx := range t.channels {
+		channel := t.channels[idx]
 		wg.Add(1)
 		go func(channel string, wg *sync.WaitGroup) {
 			defer wg.Done()
@@ -50,6 +69,7 @@ func SendTeleMessage(ctx context.Context, message string) {
 				logger.Errorf("invalid telegram channel id: %v", err)
 				return
 			}
+
 			msg := tgbotapi.NewMessage(channelId, message)
 			msg.ParseMode = "markdown"
 			if _, err = bot.Send(msg); err != nil {
@@ -57,6 +77,5 @@ func SendTeleMessage(ctx context.Context, message string) {
 			}
 		}(channel, &wg)
 	}
-
 	wg.Wait()
 }
