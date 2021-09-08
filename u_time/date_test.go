@@ -2,8 +2,9 @@ package datetime
 
 import (
 	"fmt"
-	"github.com/smartystreets/goconvey/convey"
 	"testing"
+
+	"github.com/smartystreets/goconvey/convey"
 )
 
 func TestToDateUtil(t *testing.T) {
