@@ -1,4 +1,4 @@
-package u_env_parser
+package u_env
 
 import (
 	"os"
@@ -26,6 +26,18 @@ func GetInt(key string, defaultValue int64) int64 {
 	return intValue
 }
 
+func GetFloat(key string, defaultValue float64) float64 {
+	envValue := os.Getenv(key)
+	if strings.TrimSpace(envValue) == "" {
+		return defaultValue
+	}
+	floatValue, err := strconv.ParseFloat(envValue, 64)
+	if err != nil {
+		return defaultValue
+	}
+	return floatValue
+}
+
 func GetArray(key string, separator string, defaultValue []string) []string {
 	envValue := os.Getenv(key)
 	if strings.TrimSpace(envValue) == "" {
@@ -40,4 +52,8 @@ func IsDev() bool {
 
 func IsProd() bool {
 	return GetString("ENV", "") == "prod"
+}
+
+func IsTest() bool {
+	return GetString("TESTING", "") == "yes"
 }

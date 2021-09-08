@@ -4,13 +4,72 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	http_client "github.com/tikivn/ultrago/u_http_client"
-	logaff "github.com/tikivn/ultrago/u_logaff"
+	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/tikivn/ultrago/u_env"
+	"github.com/tikivn/ultrago/u_http_client"
+	"github.com/tikivn/ultrago/u_logger"
 )
 
-const siteVerifyURL = "https://www.google.com/recaptcha/api/siteverify"
+const (
+	RECAPTCHA_SECRET_KEY string = "RECAPTCHA_SECRET_KEY"
+	RECAPTCHA_THRESHOLD  string = "RECAPTCHA_THRESHOLD"
+)
+
+func NewRecaptcha(httpExecutor u_http_client.HttpExecutor) (*Recaptcha, error) {
+	secret := u_env.GetString(RECAPTCHA_SECRET_KEY, "")
+	if secret == "" {
+		return nil, errors.New("missing env RECAPTCHA_SECRET")
+	}
+	return &Recaptcha{
+		verifyURL:    "https://www.google.com/recaptcha/api/siteverify",
+		secret:       secret,
+		threshold:    u_env.GetFloat(RECAPTCHA_THRESHOLD, 0.3),
+		httpExecutor: httpExecutor,
+	}, nil
+}
+
+type Recaptcha struct {
+	verifyURL string
+	secret    string
+	threshold float64
+
+	httpExecutor u_http_client.HttpExecutor
+}
+
+func (c Recaptcha) VerifyCaptcha(ctx context.Context, captcha string) error {
+	ctx, logger := u_logger.GetLogger(ctx)
+	if c.secret == "" {
+		return errors.New("missing recaptcha secret")
+	}
+	if captcha == "" {
+		return errors.New("missing captcha input")
+	}
+
+	params := map[string]string{
+		"secret":   c.secret,
+		"response": captcha,
+	}
+
+	resp, err := u_http_client.NewHttpClient(c.httpExecutor, 5*time.Second).
+		WithUrl(c.verifyURL, params).
+		Do(ctx, http.MethodPost)
+	if err != nil {
+		return err
+	}
+
+	var res SiteVerifyResponse
+	if err = json.Unmarshal(resp, &res); err != nil {
+		logger.Errorf("parse SiteVerifyResponse failed: %v", err)
+		return err
+	} else if err = res.Validate(c.threshold); err != nil {
+		logger.Errorf("validate SiteVerifyResponse failed: %v", err)
+		return err
+	}
+	return nil
+}
 
 type SiteVerifyResponse struct {
 	Success     bool      `json:"success"`
@@ -21,44 +80,12 @@ type SiteVerifyResponse struct {
 	ErrorCodes  []string  `json:"error-codes"`
 }
 
-func ValidateRecaptcha(ctx context.Context, secret string, captcha string) error {
-	logger := logaff.GetNewLogger()
-
-	if secret == "" || captcha == "" {
-		return errors.New("missing captcha configuration")
+func (res SiteVerifyResponse) Validate(threshold float64) error {
+	if !res.Success {
+		return fmt.Errorf("verify recaptcha failed with scores=%f", res.Score)
 	}
-
-	params := map[string]string{
-		"secret":   secret,
-		"response": captcha,
+	if res.Score < threshold {
+		return fmt.Errorf("verify recaptcha with score=%f lower than threshold=%f", res.Score, threshold)
 	}
-
-	httpClient := http_client.NewHttpClient(5*time.Second).WithUrl(siteVerifyURL, params)
-	resp, err := httpClient.Do(ctx, http.MethodPost)
-	if err != nil {
-		return err
-	}
-
-	var body SiteVerifyResponse
-	if err := json.Unmarshal(resp, &body); err != nil {
-		return err
-	}
-
-	// Check recaptcha verification success.
-	if !body.Success {
-		return errors.New("unsuccessful recaptcha verify request")
-	}
-
-	// Check response score.
-	if body.Score < 0.3 {
-		logger.Errorf("lower received score than expected: %f", body.Score)
-		return errors.New("lower received score than expected")
-	}
-
-	// Check response action.
-	// if body.Action != "login" {
-	// 	return errors.New("mismatched recaptcha action")
-	// }
-
 	return nil
 }

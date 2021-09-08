@@ -1,11 +1,11 @@
-package url
+package u_validator
 
 import (
 	"fmt"
 	"net/url"
 )
 
-func ValidateURL(str string) (*url.URL, error) {
+func VerifyURL(str string) (*url.URL, error) {
 	u, err := url.ParseRequestURI(str)
 	if err != nil {
 		return nil, err

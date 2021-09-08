@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	env_parser "github.com/tikivn/ultrago/u_env_parser"
+	"github.com/tikivn/ultrago/u_env"
 )
 
 func TestTelegram(t *testing.T) {
@@ -14,8 +14,8 @@ func TestTelegram(t *testing.T) {
 		ctx := context.Background()
 		// need set env before run
 		telegramIns = &telegram{
-			token:    env_parser.GetString(TELEGRAM_BOT_TOKEN, ""),
-			channels: env_parser.GetArray(TELEGRAM_CHANNELS, ",", nil),
+			token:    u_env.GetString(TELEGRAM_BOT_TOKEN, ""),
+			channels: u_env.GetArray(TELEGRAM_CHANNELS, ",", nil),
 		}
 		assert.NotEmpty(t, telegramIns.token)
 		assert.NotEmpty(t, telegramIns.channels)
@@ -34,8 +34,8 @@ Get Link Program:
 https://test-url/get-link/program/testing-program-id
 Thanks team.`
 		telegramIns = &telegram{
-			token:    env_parser.GetString(TELEGRAM_BOT_TOKEN, ""),
-			channels: env_parser.GetArray(TELEGRAM_CHANNELS, ",", nil),
+			token:    u_env.GetString(TELEGRAM_BOT_TOKEN, ""),
+			channels: u_env.GetArray(TELEGRAM_CHANNELS, ",", nil),
 		}
 		assert.NotEmpty(t, telegramIns.token)
 		assert.NotEmpty(t, telegramIns.channels)

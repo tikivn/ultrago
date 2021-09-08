@@ -1,8 +1,10 @@
-package email
+package u_validator
 
-import "testing"
+import (
+	"testing"
+)
 
-func TestIsEmailValid(t *testing.T) {
+func TestVerifyEmail(t *testing.T) {
 	type args struct {
 		e string
 	}
@@ -42,8 +44,8 @@ func TestIsEmailValid(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsEmailValid(tt.args.e); got != tt.want {
-				t.Errorf("IsEmailValid() = %v, want %v", got, tt.want)
+			if got := VerifyEmail(tt.args.e); got != tt.want {
+				t.Errorf("VerifyEmail() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -3,7 +3,7 @@ package u_alert
 import (
 	"sync"
 
-	"github.com/tikivn/ultrago/u_env_parser"
+	"github.com/tikivn/ultrago/u_env"
 )
 
 var (
@@ -25,7 +25,7 @@ func Slack() *slack {
 	if slackIns == nil {
 		slackOnce.Do(func() {
 			slackIns = &slack{
-				webhookURL: u_env_parser.GetString(SLACK_WEBHOOK_URL, ""),
+				webhookURL: u_env.GetString(SLACK_WEBHOOK_URL, ""),
 			}
 		})
 	}
@@ -36,8 +36,8 @@ func Telegram() *telegram {
 	if telegramIns == nil {
 		telegramOnce.Do(func() {
 			telegramIns = &telegram{
-				token:    u_env_parser.GetString(TELEGRAM_BOT_TOKEN, ""),
-				channels: u_env_parser.GetArray(TELEGRAM_CHANNELS, ",", nil),
+				token:    u_env.GetString(TELEGRAM_BOT_TOKEN, ""),
+				channels: u_env.GetArray(TELEGRAM_CHANNELS, ",", nil),
 			}
 		})
 	}

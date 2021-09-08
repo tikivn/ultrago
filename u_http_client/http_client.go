@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	env_parser "github.com/tikivn/ultrago/u_env_parser"
+	"github.com/tikivn/ultrago/u_env"
 	"github.com/tikivn/ultrago/u_logger"
 	"moul.io/http2curl"
 )
@@ -114,7 +114,7 @@ func (c *HttpClient) Do(ctx context.Context, method string) ([]byte, error) {
 		r.Header.Set(key, value)
 	}
 
-	if env_parser.IsDev() {
+	if u_env.IsDev() {
 		command, _ := http2curl.GetCurlCommand(r)
 		logger.Info(command.String())
 	}
@@ -162,7 +162,7 @@ func (c *HttpClient) DoFormEncoding(ctx context.Context, method string) ([]byte,
 		r.Header.Set(key, value)
 	}
 
-	if env_parser.IsDev() {
+	if u_env.IsDev() {
 		command, _ := http2curl.GetCurlCommand(r)
 		logger.Info(command.String())
 	}

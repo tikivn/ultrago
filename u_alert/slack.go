@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	slack_webhook "github.com/ashwanthkumar/slack-go-webhook"
-	"github.com/tikivn/ultrago/u_env_parser"
+	"github.com/tikivn/ultrago/u_env"
 	"github.com/tikivn/ultrago/u_logger"
 )
 
@@ -16,7 +16,7 @@ type slack struct {
 }
 
 func (s slack) env() string {
-	return strings.ToUpper(u_env_parser.GetString("ENV", "DEV"))
+	return strings.ToUpper(u_env.GetString("ENV", "DEV"))
 }
 
 func (s slack) Validate() error {
