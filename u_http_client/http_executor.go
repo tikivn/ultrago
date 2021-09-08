@@ -8,6 +8,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/tikivn/ultrago/u_logger"
+	"github.com/tikivn/ultrago/u_prometheus"
 )
 
 func NewHttpExecutor() HttpExecutor {
@@ -25,8 +26,8 @@ func (c *httpExecutor) Execute(r *http.Request, timeout time.Duration, retry uin
 		client := &http.Client{
 			Timeout: timeout,
 		}
-		// todo move prometheus to ultrago
-		// start := time.Now()
+
+		start := time.Now()
 		httpRes, err := client.Do(r)
 		if err != nil {
 			return err
@@ -38,9 +39,9 @@ func (c *httpExecutor) Execute(r *http.Request, timeout time.Duration, retry uin
 			httpRes.Body.Close()
 		}()
 
-		// setting.MetricOutgoingHttpRequest.
-		// 	WithLabelValues(fmt.Sprintf("%d", httpRes.StatusCode), r.Method, r.URL.Path, r.URL.Host).
-		// 	Observe(time.Since(start).Seconds())
+		u_prometheus.MetricOutgoingHttpRequest.
+			WithLabelValues(fmt.Sprintf("%d", httpRes.StatusCode), r.Method, r.URL.Path, r.URL.Host).
+			Observe(time.Since(start).Seconds())
 
 		res, err = ioutil.ReadAll(httpRes.Body)
 		if httpRes.StatusCode > 299 {
