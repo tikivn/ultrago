@@ -5,42 +5,58 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/leekchan/accounting"
-	"github.com/slongfield/pyfmt"
-	"github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
+	env_parser "github.com/tikivn/ultrago/u_env_parser"
 )
 
-func TestTelegramImpl(t *testing.T) {
-	convey.FocusConvey("TestTelegramImpl", t, func() {
-		convey.Convey("TestTelegram_SendMessage", func() {
-			Telegram().SendTeleMessage(context.Background(), "hello world")
-		})
+func TestTelegram(t *testing.T) {
+	t.Run("SendSuccess", func(t *testing.T) {
+		ctx := context.Background()
+		// need set env before run
+		telegramIns = &telegram{
+			token:    env_parser.GetString(TELEGRAM_BOT_TOKEN, ""),
+			channels: env_parser.GetArray(TELEGRAM_CHANNELS, ",", nil),
+		}
+		assert.NotEmpty(t, telegramIns.token)
+		assert.NotEmpty(t, telegramIns.channels)
+		err := Telegram().SendMessage(ctx, fmt.Sprintf("telegram test msg with formatter=%v", "test"))
+		assert.Nil(t, err)
+	})
 
-		convey.FocusConvey("TestTelegram_FormatMessage", func() {
-			ac := accounting.Accounting{Precision: 0, Thousand: ",", Decimal: "."}
-			template :=
-				`Dear team,
-Tiki AFF có program mới như sau: 
-				
-{programName}: {commissionUpTo:.1f} % ({startDate} - {endDate})
-
-Ngân sách (VNĐ): {totalBudget}
-
+	t.Run("SendSuccess_Markdown", func(t *testing.T) {
+		ctx := context.Background()
+		message :=
+			`Dear team,
+Tiki AFF có program mới như sau:
+Program A: 20.6% (2021-01-01 - 2021-01-10)
+Ngân sách (VNĐ): 100000000000000000000
 Get Link Program: 
-https://affiliate.tiki.com.vn/get-link/program/{programId}
-				
+https://test-url/get-link/program/testing-program-id
 Thanks team.`
-			message := pyfmt.Must(template,
-				map[string]interface{}{
-					"programName":    "Program A",
-					"commissionUpTo": 20.6,
-					"startDate":      "2021-01-01",
-					"endDate":        "2021-01-10",
-					"totalBudget":    ac.FormatMoney(100000000000000000000.0111),
-					"programId":      "111dee9c-9f46-4fc6-8c52-7b772f6f540a",
-				})
-			fmt.Println(message)
-			Telegram().SendTeleMessage(context.Background(), message)
-		})
+		telegramIns = &telegram{
+			token:    env_parser.GetString(TELEGRAM_BOT_TOKEN, ""),
+			channels: env_parser.GetArray(TELEGRAM_CHANNELS, ",", nil),
+		}
+		assert.NotEmpty(t, telegramIns.token)
+		assert.NotEmpty(t, telegramIns.channels)
+		err := Telegram().SendMessageMarkdown(ctx, message)
+		assert.Nil(t, err)
+	})
+
+	t.Run("SendFail_ValidateFail", func(t *testing.T) {
+		ctx := context.Background()
+		telegramIns = &telegram{}
+		err := Telegram().SendMessage(ctx, fmt.Sprintf("telegram test msg with formatter=%v", "test"))
+		assert.NotNil(t, err)
+	})
+
+	t.Run("SendFail_WebhookFail", func(t *testing.T) {
+		ctx := context.Background()
+		telegramIns = &telegram{
+			token:    "test-token",
+			channels: []string{"test-channel"},
+		}
+		err := Telegram().SendMessage(ctx, fmt.Sprintf("telegram test msg with formatter=%v", "test"))
+		assert.NotNil(t, err)
 	})
 }

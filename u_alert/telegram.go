@@ -3,30 +3,14 @@ package u_alert
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/tikivn/ultrago/u_env_parser"
 	"github.com/tikivn/ultrago/u_logger"
 )
-
-var (
-	telegramIns  *telegram
-	telegramOnce sync.Once
-)
-
-func Telegram() *telegram {
-	if telegramIns == nil {
-		telegramOnce.Do(func() {
-			telegramIns = &telegram{
-				token:    u_env_parser.GetString("TELEGRAM_BOT_TOKEN", ""),
-				channels: u_env_parser.GetArray("TELEGRAM_CHANNELS", ",", nil),
-			}
-		})
-	}
-	return telegramIns
-}
 
 type telegram struct {
 	token    string
@@ -43,18 +27,18 @@ func (t telegram) Validate() error {
 	return nil
 }
 
-func (t telegram) SendTeleMessage(ctx context.Context, message string) {
+func (t telegram) SendMessage(ctx context.Context, message string) error {
 	ctx, logger := u_logger.GetLogger(ctx)
 	err := t.Validate()
 	if err != nil {
 		logger.Errorf(err.Error())
-		return
+		return err
 	}
 
 	bot, err := tgbotapi.NewBotAPI(t.token)
 	if err != nil {
 		logger.Errorf("fail to connect to telegram: %v", err)
-		return
+		return err
 	}
 
 	var wg sync.WaitGroup
@@ -78,4 +62,21 @@ func (t telegram) SendTeleMessage(ctx context.Context, message string) {
 		}(channel, &wg)
 	}
 	wg.Wait()
+	return nil
+}
+
+func (t telegram) SendMessageMarkdown(ctx context.Context, message string) error {
+	return t.SendMessage(ctx, t.escapeMarkdown(message))
+}
+
+/*
+ * prepend '\' before special characters
+ * https://core.telegram.org/bots/api#formatting-options
+ */
+func (t telegram) escapeMarkdown(message string) string {
+	replaceChars := []string{"_", "*", "`", "["}
+	for _, char := range replaceChars {
+		message = strings.ReplaceAll(message, char, fmt.Sprintf("\\%s", char))
+	}
+	return message
 }
