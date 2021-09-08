@@ -1,13 +1,21 @@
-package encrypt
+package hash
 
 import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	mrand "math/rand"
 )
 
-func Encrypt(key, data []byte) ([]byte, error) {
+func NewSecretKey() ([]byte, error) {
+	key := make([]byte, 32)
+	_, err := rand.Read(key)
+	if err != nil {
+		return nil, err
+	}
+	return key, nil
+}
+
+func EncryptWithSecret(key []byte, data []byte) ([]byte, error) {
 	blockCipher, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -24,7 +32,7 @@ func Encrypt(key, data []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
-func Decrypt(key, data []byte) ([]byte, error) {
+func DecryptWithSecret(key []byte, data []byte) ([]byte, error) {
 	blockCipher, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -39,23 +47,4 @@ func Decrypt(key, data []byte) ([]byte, error) {
 		return nil, err
 	}
 	return plaintext, nil
-}
-
-func GenerateKey() ([]byte, error) {
-	key := make([]byte, 32)
-	_, err := rand.Read(key)
-	if err != nil {
-		return nil, err
-	}
-	return key, nil
-}
-
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-
-func GenerateRandomStringWithLength(length int) string {
-	b := make([]rune, length)
-	for i := range b {
-		b[i] = letters[mrand.Intn(len(letters))]
-	}
-	return string(b)
 }
