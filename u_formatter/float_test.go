@@ -1,4 +1,4 @@
-package numeric
+package u_formatter
 
 import (
 	"testing"
