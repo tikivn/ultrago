@@ -1,3 +1,3 @@
-package image
+package u_image
 
 // todo implement

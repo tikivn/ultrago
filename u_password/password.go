@@ -1,4 +1,4 @@
-package password
+package u_password
 
 import (
 	"crypto/rand"

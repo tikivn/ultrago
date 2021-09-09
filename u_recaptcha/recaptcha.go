@@ -1,4 +1,4 @@
-package recaptcha
+package u_recaptcha
 
 import (
 	"context"

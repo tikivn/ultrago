@@ -1,4 +1,4 @@
-package hash
+package u_hash
 
 import "testing"
 

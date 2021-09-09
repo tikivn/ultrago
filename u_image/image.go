@@ -1,4 +1,4 @@
-package image
+package u_image
 
 import (
 	"bytes"

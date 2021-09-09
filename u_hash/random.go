@@ -1,7 +1,7 @@
-package hash
+package u_hash
 
 import (
-	mrand "math/rand"
+	"math/rand"
 )
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
@@ -9,7 +9,7 @@ var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345
 func RandomString(length int) string {
 	b := make([]rune, length)
 	for i := range b {
-		b[i] = letters[mrand.Intn(len(letters))]
+		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)
 }

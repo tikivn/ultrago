@@ -1,4 +1,4 @@
-package miscellaneous
+package u_miscellaneous
 
 import (
 	"encoding/json"
