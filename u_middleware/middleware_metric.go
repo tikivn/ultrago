@@ -10,20 +10,39 @@ import (
 	"github.com/tikivn/ultrago/u_prometheus"
 )
 
-func NewMetricMiddleware(pathConfig PathConfig) *MetricMiddleware {
-	if pathConfig == nil {
-		pathConfig = NewDefaultPathConfig()
-	}
-
+func NewMetricMiddleware() *MetricMiddleware {
 	return &MetricMiddleware{
-		pathCleanUpMap: pathConfig.PathCleanUp(),
-		pathIgnoredMap: pathConfig.PathIgnored(),
+		pathCleanUpMap: map[*regexp.Regexp]string{
+			regexp.MustCompile("\\/([0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12})\\/"): "/<id>/",
+			regexp.MustCompile("\\/([0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12})"):    "/<id>",
+		},
+		pathIgnoredMap: map[string]bool{
+			"/":            true,
+			"/healthcheck": true,
+			"/heartbeat":   true,
+			"/metrics":     true,
+		},
 	}
 }
 
 type MetricMiddleware struct {
 	pathCleanUpMap map[*regexp.Regexp]string
 	pathIgnoredMap map[string]bool
+}
+
+func (a *MetricMiddleware) WithPathConfig(conf PathConfig) *MetricMiddleware {
+	if conf != nil {
+		pathCleanUp := conf.PathCleanUp()
+		if len(pathCleanUp) > 0 {
+			a.pathCleanUpMap = pathCleanUp
+		}
+
+		pathIgnored := conf.PathIgnored()
+		if len(pathIgnored) > 0 {
+			a.pathIgnoredMap = pathIgnored
+		}
+	}
+	return a
 }
 
 func (a *MetricMiddleware) Middleware() func(http.Handler) http.Handler {
