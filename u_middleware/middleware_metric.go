@@ -10,14 +10,14 @@ import (
 	"github.com/tikivn/ultrago/u_prometheus"
 )
 
-func NewMetricMiddleware(metricMap PathConfig) *MetricMiddleware {
-	if metricMap == nil {
-		metricMap = NewDefaultPathConfig()
+func NewMetricMiddleware(pathConfig PathConfig) *MetricMiddleware {
+	if pathConfig == nil {
+		pathConfig = NewDefaultPathConfig()
 	}
 
 	return &MetricMiddleware{
-		pathCleanUpMap: metricMap.PathCleanUp(),
-		pathIgnoredMap: metricMap.PathIgnored(),
+		pathCleanUpMap: pathConfig.PathCleanUp(),
+		pathIgnoredMap: pathConfig.PathIgnored(),
 	}
 }
 
