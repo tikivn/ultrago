@@ -53,8 +53,17 @@ type Logger struct {
 	*logrus.Entry
 }
 
-func (l *Logger) WithTrackingID(id string) *Logger {
-	return &Logger{l.Entry.WithField(trackingID, id)}
+func (l *Logger) GetTrackingID() string {
+	id, ok := l.Data[trackingID]
+	if !ok {
+		return "no-tracking-id"
+	} else {
+		res, ok := id.(string)
+		if !ok {
+			return "invalid-tracking-id"
+		}
+		return res
+	}
 }
 
 func (l *Logger) WithField(key string, value interface{}) *Logger {
