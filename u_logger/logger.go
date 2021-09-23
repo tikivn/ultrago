@@ -38,14 +38,6 @@ func GetLogger(ctx context.Context) (context.Context, *Logger) {
 
 	// init logger
 	log = NewLogger()
-	if trackingInfo, exist := ctx.Value(LoggerTrackingKey).(TrackingInfo); !exist {
-		if trackingInfo.GetSessionID() != "" {
-			log.Entry = log.Entry.WithField(sessionID, trackingInfo.GetSessionID())
-		}
-		if trackingInfo.GetUserID() != "" {
-			log.Entry = log.Entry.WithField(userID, trackingInfo.GetUserID())
-		}
-	}
 	return context.WithValue(ctx, loggerKey, log), log
 }
 
