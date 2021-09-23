@@ -16,6 +16,16 @@ func NewLogger() *Logger {
 	return &Logger{entry}
 }
 
+// NewLoggerCtx override existed logger key in ctx
+func NewLoggerCtx(ctx context.Context, trackingId string) (context.Context, *Logger) {
+	if trackingId == "" {
+		trackingId = uuid.New().String()
+	}
+	entryLogger := std.WithField(trackingID, trackingId)
+	instance := &Logger{entryLogger}
+	return context.WithValue(ctx, loggerKey, instance), instance
+}
+
 func GetLogger(ctx context.Context) (context.Context, *Logger) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -28,6 +38,14 @@ func GetLogger(ctx context.Context) (context.Context, *Logger) {
 
 	// init logger
 	log = NewLogger()
+	if trackingInfo, exist := ctx.Value(LoggerTrackingKey).(TrackingInfo); !exist {
+		if trackingInfo.GetSessionID() != "" {
+			log.Entry = log.Entry.WithField(sessionID, trackingInfo.GetSessionID())
+		}
+		if trackingInfo.GetUserID() != "" {
+			log.Entry = log.Entry.WithField(userID, trackingInfo.GetUserID())
+		}
+	}
 	return context.WithValue(ctx, loggerKey, log), log
 }
 
