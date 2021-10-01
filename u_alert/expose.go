@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/tikivn/ultrago/u_env"
+	"github.com/tikivn/ultrago/u_logger"
 )
 
 var (
@@ -20,6 +21,22 @@ const (
 	TELEGRAM_BOT_TOKEN string = "TELEGRAM_BOT_TOKEN"
 	TELEGRAM_CHANNELS  string = "TELEGRAM_CHANNELS"
 )
+
+func init() {
+	_, logger := u_logger.GetLogger(nil)
+	slackEnabled := u_env.GetString(SLACK_WEBHOOK_URL, "") != ""
+	telegramEnabled := u_env.GetString(TELEGRAM_BOT_TOKEN, "") != ""
+	if slackEnabled {
+		logger.Infof("Slack webhook is enabled")
+	} else {
+		logger.Warnf("Slack webhook is not enabled")
+	}
+	if telegramEnabled {
+		logger.Infof("Telegram webhook is enabled")
+	} else {
+		logger.Warnf("Telegram webhook is not enabled")
+	}
+}
 
 func Slack() *slack {
 	if slackIns == nil {

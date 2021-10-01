@@ -4,37 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tikivn/ultrago/u_logger"
 )
-
-func NewBaseHandler() *BaseHandler {
-	return &BaseHandler{
-		logConfig: map[int]bool{
-			http.StatusBadRequest:          true,
-			http.StatusForbidden:           true,
-			http.StatusTooManyRequests:     true,
-			http.StatusInternalServerError: true,
-		},
-	}
-}
-
-type BaseHandler struct {
-	logConfig map[int]bool
-}
-
-func (h *BaseHandler) WithLogConfig(conf LogConfig) *BaseHandler {
-	if conf != nil {
-		logConfig := conf.StatusConfig()
-		if len(logConfig) > 0 {
-			h.logConfig = logConfig
-		}
-	}
-	return h
-}
 
 func (h *BaseHandler) BadRequest(w http.ResponseWriter, r *http.Request, err error) {
 	h.logging(r, http.StatusBadRequest)
@@ -84,7 +57,7 @@ func (h *BaseHandler) FileSuccess(w http.ResponseWriter, r *http.Request, data i
 	w.Write(byteData)
 }
 
-func (h *BaseHandler) PageableSuccess(w http.ResponseWriter, r *http.Request, data interface{}, total int64) {
+func (h *BaseHandler) PaginateSuccess(w http.ResponseWriter, r *http.Request, data interface{}, total int64) {
 	offset := h.RequestParamInt(r, OffsetKey, 0)
 	limit := h.RequestParamInt(r, LimitKey, 10)
 
@@ -100,45 +73,6 @@ func (h *BaseHandler) PageableSuccess(w http.ResponseWriter, r *http.Request, da
 			"limit":  limit,
 		},
 	})
-}
-
-func (h *BaseHandler) RequestParamStr(r *http.Request, key string) string {
-	return r.URL.Query().Get(key)
-}
-
-func (h *BaseHandler) RequestParamStrWithDefault(r *http.Request, key string, defaultValue string) string {
-	value := r.URL.Query().Get(key)
-	if value == "" {
-		return defaultValue
-	}
-	return value
-}
-
-func (h *BaseHandler) RequestParamInt(r *http.Request, key string, defaultValue int64) int64 {
-	value := r.URL.Query().Get(key)
-	valueInt, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		return defaultValue
-	}
-	return valueInt
-}
-
-func (h *BaseHandler) RequestParamBool(r *http.Request, key string, defaultValue bool) bool {
-	value := r.URL.Query().Get(key)
-	valueBool, err := strconv.ParseBool(value)
-	if err != nil {
-		return defaultValue
-	}
-	return valueBool
-}
-
-func (h *BaseHandler) RequestParamArray(r *http.Request, key string) []string {
-	value := r.URL.Query().Get(key)
-	if value == "" {
-		return []string{}
-	} else {
-		return strings.Split(value, ",")
-	}
 }
 
 func (h *BaseHandler) logging(r *http.Request, statusCode int) {

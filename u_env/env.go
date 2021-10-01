@@ -4,7 +4,15 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/tikivn/ultrago/u_logger"
 )
+
+func init() {
+	_, logger := u_logger.GetLogger(nil)
+	currentEnv := GetString("ENV", "")
+	logger.Infof("Current ENV=%s", currentEnv)
+}
 
 func GetString(key string, defaultValue string) string {
 	envValue := os.Getenv(key)
@@ -47,13 +55,13 @@ func GetArray(key string, separator string, defaultValue []string) []string {
 }
 
 func IsDev() bool {
-	return GetString("ENV", "") == "dev"
+	return strings.ToLower(GetString("ENV", "")) == "dev"
 }
 
 func IsProd() bool {
-	return GetString("ENV", "") == "prod"
+	return strings.ToLower(GetString("ENV", "")) == "prod"
 }
 
 func IsTest() bool {
-	return GetString("TESTING", "") == "yes"
+	return strings.ToLower(GetString("TESTING", "")) == "yes"
 }
