@@ -48,16 +48,16 @@ func (t telegram) SendMessage(ctx context.Context, message string) error {
 		go func(channel string, wg *sync.WaitGroup) {
 			defer wg.Done()
 
-			channelId, err := strconv.ParseInt(channel, 10, 64)
-			if err != nil {
-				logger.Errorf("invalid telegram channel id: %v", err)
+			channelId, childErr := strconv.ParseInt(channel, 10, 64)
+			if childErr != nil {
+				logger.Errorf("invalid telegram channel id: %v", childErr)
 				return
 			}
 
 			msg := tgbotapi.NewMessage(channelId, message)
 			msg.ParseMode = "markdown"
-			if _, err = bot.Send(msg); err != nil {
-				logger.Errorf("fail to send message to telegram channel %s: %v", channel, err)
+			if _, childErr = bot.Send(msg); childErr != nil {
+				logger.Errorf("fail to send message to telegram channel %s: %v", channel, childErr)
 			}
 		}(channel, &wg)
 	}

@@ -59,7 +59,7 @@ func (s slack) slackAlert(ctx context.Context, message string) []error {
 		Text: message,
 	}
 	if slackErr := slack_webhook.Send(s.webhookURL, "", payload); len(slackErr) > 0 {
-		logger.Errorf("slack send errors: %s", err)
+		logger.Errorf("slack send errors: %v", err)
 		return slackErr
 	}
 	return nil
