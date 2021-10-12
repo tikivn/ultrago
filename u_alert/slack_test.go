@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tikivn/ultrago/u_env"
@@ -35,6 +36,18 @@ func TestSlack(t *testing.T) {
 		slackIns = &slack{
 			webhookURL: "https://hooks.slack.com/services/abc",
 		}
+		errs := Slack().slackAlert(ctx, fmt.Sprintf("slack test msg with formatter=%v", "test"))
+		assert.Equal(t, 1, len(errs))
+	})
+
+	t.Run("SendMessage_WithContext", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Millisecond*80))
+		defer cancel()
+
+		slackIns = &slack{
+			webhookURL: u_env.GetString(SLACK_WEBHOOK_URL, ""),
+		}
+		assert.NotEmpty(t, slackIns.webhookURL)
 		errs := Slack().slackAlert(ctx, fmt.Sprintf("slack test msg with formatter=%v", "test"))
 		assert.Equal(t, 1, len(errs))
 	})

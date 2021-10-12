@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tikivn/ultrago/u_env"
@@ -58,5 +59,19 @@ Thanks team.`
 		}
 		err := Telegram().SendMessage(ctx, fmt.Sprintf("telegram test msg with formatter=%v", "test"))
 		assert.NotNil(t, err)
+	})
+
+	t.Run("SendMessage_WithContext", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Millisecond*80))
+		defer cancel()
+
+		telegramIns = &telegram{
+			token:    u_env.GetString(TELEGRAM_BOT_TOKEN, ""),
+			channels: u_env.GetArray(TELEGRAM_CHANNELS, ",", nil),
+		}
+		assert.NotEmpty(t, telegramIns.token)
+		assert.NotEmpty(t, telegramIns.channels)
+		err := Telegram().SendMessage(ctx, fmt.Sprintf("telegram test msg with formatter=%v", "test"))
+		assert.Nil(t, err)
 	})
 }
