@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	slack_webhook "github.com/ashwanthkumar/slack-go-webhook"
+	slack_webhook "github.com/slack-go/slack"
 	"github.com/tikivn/ultrago/u_env"
 	"github.com/tikivn/ultrago/u_logger"
 )
@@ -55,12 +55,12 @@ func (s slack) slackAlert(ctx context.Context, message string) []error {
 		return []error{err}
 	}
 
-	payload := slack_webhook.Payload{
+	payload := &slack_webhook.WebhookMessage{
 		Text: message,
 	}
-	if slackErr := slack_webhook.Send(s.webhookURL, "", payload); len(slackErr) > 0 {
-		logger.Errorf("slack send errors: %v", err)
-		return slackErr
+	if slackErr := slack_webhook.PostWebhookContext(ctx, s.webhookURL, payload); slackErr != nil {
+		logger.Errorf("slack send errors: %v", slackErr)
+		return []error{slackErr}
 	}
 	return nil
 }
