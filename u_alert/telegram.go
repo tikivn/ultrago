@@ -27,6 +27,34 @@ func (t telegram) Validate() error {
 	return nil
 }
 
+func sendTele(ctx context.Context, wg *sync.WaitGroup, bot *tgbotapi.BotAPI, channel string, message string) {
+	ctx, logger := u_logger.GetLogger(ctx)
+	defer wg.Done()
+
+	done := make(chan struct{})
+	go func() {
+		channelId, childErr := strconv.ParseInt(channel, 10, 64)
+		if childErr != nil {
+			logger.Errorf("invalid telegram channel id: %v", childErr)
+			return
+		}
+
+		msg := tgbotapi.NewMessage(channelId, message)
+		msg.ParseMode = "markdown"
+		if _, childErr = bot.Send(msg); childErr != nil {
+			logger.Errorf("fail to send message to telegram channel %s: %v", channel, childErr)
+		}
+		done <- struct{}{} // signal work is done
+	}()
+
+	select {
+	case <-done:
+		logger.Infof("send message to tele channel %s success", channel)
+	case <-ctx.Done():
+		logger.Infof("exit from ctx done")
+	}
+}
+
 func (t telegram) SendMessage(ctx context.Context, message string) error {
 	ctx, logger := u_logger.GetLogger(ctx)
 	err := t.Validate()
@@ -45,21 +73,7 @@ func (t telegram) SendMessage(ctx context.Context, message string) error {
 	for idx := range t.channels {
 		channel := t.channels[idx]
 		wg.Add(1)
-		go func(channel string, wg *sync.WaitGroup) {
-			defer wg.Done()
-
-			channelId, childErr := strconv.ParseInt(channel, 10, 64)
-			if childErr != nil {
-				logger.Errorf("invalid telegram channel id: %v", childErr)
-				return
-			}
-
-			msg := tgbotapi.NewMessage(channelId, message)
-			msg.ParseMode = "markdown"
-			if _, childErr = bot.Send(msg); childErr != nil {
-				logger.Errorf("fail to send message to telegram channel %s: %v", channel, childErr)
-			}
-		}(channel, &wg)
+		go sendTele(ctx, &wg, bot, channel, message)
 	}
 	wg.Wait()
 	return nil
