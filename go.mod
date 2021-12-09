@@ -6,6 +6,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.1
 	github.com/flosch/pongo2 v0.0.0-20200913210552-0d938eb266f3
 	github.com/go-chi/chi/v5 v5.0.4
+	github.com/go-playground/validator/v10 v10.9.0 // indirect
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/prometheus/client_golang v1.11.0
