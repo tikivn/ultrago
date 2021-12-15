@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+func FromDateTime(dt time.Time) *Date {
+	d := Date(dt)
+	return &d
+}
+
 func Today() *Date {
 	loc, err := HoChiMinhTz()
 	if err != nil {
