@@ -15,6 +15,14 @@ func HoChiMinhTz() (*time.Location, error) {
 	return loc, err
 }
 
+func HCMinhTzDefaultLocal() *time.Location {
+	loc, err := HoChiMinhTz()
+	if err != nil {
+		return time.Local
+	}
+	return loc
+}
+
 func MustHoChiMinhTz() *time.Location {
 	loc, err := HoChiMinhTz()
 	if err != nil {
@@ -24,20 +32,32 @@ func MustHoChiMinhTz() *time.Location {
 }
 
 func ToDateTimeStr(t time.Time, loc *time.Location) string {
-	return t.In(loc).Format(DateTimeFormat)
+	if loc != nil {
+		return t.In(loc).Format(DateTimeFormat)
+	}
+	return t.Format(DateTimeFormat)
 }
 
 func ToDateStr(t time.Time, loc *time.Location) string {
-	return t.In(loc).Format(DateFormat)
+	if loc != nil {
+		return t.In(loc).Format(DateFormat)
+	}
+	return t.Format(DateFormat)
 }
 
 func ToMonthStr(t time.Time, loc *time.Location) string {
-	return t.In(loc).Format(MonthFormat)
+	if loc != nil {
+		return t.In(loc).Format(MonthFormat)
+	}
+	return t.Format(MonthFormat)
 }
 
 func Millis2Str(format string, millis int64, loc *time.Location) string {
 	t := Millis2Time(millis)
-	return t.In(loc).Format(format)
+	if loc != nil {
+		return t.In(loc).Format(format)
+	}
+	return t.Format(format)
 }
 
 func Millis2Time(millis int64) time.Time {
@@ -88,4 +108,3 @@ func MillisToStartOfDay(millis int64, loc *time.Location) int64 {
 	tt := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc)
 	return Time2Millis(tt)
 }
-
