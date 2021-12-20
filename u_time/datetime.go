@@ -15,7 +15,7 @@ func HoChiMinhTz() (*time.Location, error) {
 	return loc, err
 }
 
-func HCMinhTzDefaultLocal() *time.Location {
+func HoChiMinhTzDefaultLocal() *time.Location {
 	loc, err := HoChiMinhTz()
 	if err != nil {
 		return time.Local
