@@ -84,6 +84,9 @@ func Time2EndMonth(t time.Time) time.Time {
 }
 
 func Str2Time(format string, text string, loc *time.Location) (*time.Time, error) {
+	if loc == nil {
+		loc = HoChiMinhTzDefaultLocal()
+	}
 	t, err := time.ParseInLocation(format, text, loc)
 	if err != nil {
 		return nil, err
@@ -91,7 +94,22 @@ func Str2Time(format string, text string, loc *time.Location) (*time.Time, error
 	return &t, nil
 }
 
+func Str2Date(text string, loc *time.Location) (*time.Time, error) {
+	return Str2Time(DateFormat, text, loc)
+}
+
+func Str2DateTime(text string, loc *time.Location) (*time.Time, error) {
+	return Str2Time(DateTimeFormat, text, loc)
+}
+
+func Str2Month(text string, loc *time.Location) (*time.Time, error) {
+	return Str2Time(MonthFormat, text, loc)
+}
+
 func Str2Millis(format string, text string, loc *time.Location) (int64, error) {
+	if loc == nil {
+		loc = HoChiMinhTzDefaultLocal()
+	}
 	t, err := time.ParseInLocation(format, text, loc)
 	if err != nil {
 		return 0, err
