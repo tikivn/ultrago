@@ -43,6 +43,31 @@ type HttpClientV2 struct {
 	retryFnMap map[int]BeforeRetryFn
 }
 
+func (c *HttpClientV2) WithUrl(uri string, params map[string]string) *HttpClientV2 {
+	c.HttpClient = *c.HttpClient.WithUrl(uri, params)
+	return c
+}
+
+func (c *HttpClientV2) WithHeaders(headers map[string]string) *HttpClientV2 {
+	c.HttpClient = *c.HttpClient.WithHeaders(headers)
+	return c
+}
+
+func (c *HttpClientV2) WithPayload(params interface{}) *HttpClientV2 {
+	c.HttpClient = *c.HttpClient.WithPayload(params)
+	return c
+}
+
+func (c *HttpClientV2) WithBasicAuth(username string, password string) *HttpClientV2 {
+	c.HttpClient = *c.HttpClient.WithBasicAuth(username, password)
+	return c
+}
+
+func (c *HttpClientV2) WithBearerAuth(token string) *HttpClientV2 {
+	c.HttpClient = *c.HttpClient.WithBearerAuth(token)
+	return c
+}
+
 func (c *HttpClientV2) WithRetryFn(statusCode int, fn BeforeRetryFn) *HttpClientV2 {
 	if c.retryFnMap == nil {
 		c.retryFnMap = make(map[int]BeforeRetryFn, 0)
