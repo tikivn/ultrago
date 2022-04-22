@@ -95,14 +95,14 @@ func (c *HttpClient) WithBearerAuth(token string) *HttpClient {
 	return c.WithHeaders(map[string]string{"Authorization": auth})
 }
 
-func (c *HttpClient) Do(ctx context.Context, method string) ([]byte, error, int) {
+func (c *HttpClient) Do(ctx context.Context, method string) ([]byte, error) {
 	ctx, logger := u_logger.GetLogger(ctx)
 
 	var buffer *bytes.Buffer
 	if c.params != nil {
 		payload, err := json.Marshal(c.params)
 		if err != nil {
-			return nil, err, http.StatusInternalServerError
+			return nil, err
 		}
 		buffer = bytes.NewBuffer(payload)
 	} else {
@@ -112,7 +112,7 @@ func (c *HttpClient) Do(ctx context.Context, method string) ([]byte, error, int)
 
 	r, err := http.NewRequestWithContext(ctx, method, c.url, buffer)
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return nil, err
 	}
 	if c.headers == nil {
 		c.headers = make(map[string]string, 0)
@@ -134,10 +134,10 @@ func (c *HttpClient) Do(ctx context.Context, method string) ([]byte, error, int)
 		"payload": c.params,
 		"header":  c.headers,
 	}).Infof("call api with code=%d res=%s, err=%v", statusCode, string(resp), err)
-	return resp, err, statusCode
+	return resp, err
 }
 
-func (c *HttpClient) DoFormEncoding(ctx context.Context, method string) ([]byte, error, int) {
+func (c *HttpClient) DoFormEncoding(ctx context.Context, method string) ([]byte, error) {
 	ctx, logger := u_logger.GetLogger(ctx)
 
 	var buffer *strings.Reader
@@ -154,13 +154,13 @@ func (c *HttpClient) DoFormEncoding(ctx context.Context, method string) ([]byte,
 		case string:
 			buffer = strings.NewReader(c.params.(string))
 		default:
-			return nil, fmt.Errorf("invalid payload field type"), http.StatusInternalServerError
+			return nil, fmt.Errorf("invalid payload field type")
 		}
 	}
 
 	r, err := http.NewRequestWithContext(ctx, method, c.url, buffer)
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return nil, err
 	}
 	if c.headers == nil {
 		c.headers = make(map[string]string, 0)
@@ -182,19 +182,19 @@ func (c *HttpClient) DoFormEncoding(ctx context.Context, method string) ([]byte,
 		"payload": c.params,
 		"header":  c.headers,
 	}).Infof("call api with code=%d res=%s, err=%v", statusCode, string(resp), err)
-	return resp, err, statusCode
+	return resp, err
 }
 
-func (c *HttpClient) DoFormMultipart(ctx context.Context) ([]byte, error, int) {
+func (c *HttpClient) DoFormMultipart(ctx context.Context) ([]byte, error) {
 	r, err := http.NewRequestWithContext(ctx, http.MethodPost, c.url, c.params.(io.Reader))
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return nil, err
 	}
 	for key, value := range c.headers {
 		r.Header.Set(key, value)
 	}
 
-	statusCode, resp, err := c.httpExecutor.Execute(r, c.timeout, c.retry)
+	_, resp, err := c.httpExecutor.Execute(r, c.timeout, c.retry)
 	// comment because only use for upload image to cdn, will consider in the feature
-	return resp, err, statusCode
+	return resp, err
 }
