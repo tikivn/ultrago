@@ -22,12 +22,14 @@ func NewMetricMiddleware() *MetricMiddleware {
 			"/heartbeat":   true,
 			"/metrics":     true,
 		},
+		statusIgnoreMap: make(map[int]bool, 0),
 	}
 }
 
 type MetricMiddleware struct {
-	pathCleanUpMap map[*regexp.Regexp]string
-	pathIgnoredMap map[string]bool
+	pathCleanUpMap  map[*regexp.Regexp]string
+	pathIgnoredMap  map[string]bool
+	statusIgnoreMap map[int]bool
 }
 
 func (a *MetricMiddleware) WithPathConfig(conf PathConfig) *MetricMiddleware {
@@ -45,17 +47,29 @@ func (a *MetricMiddleware) WithPathConfig(conf PathConfig) *MetricMiddleware {
 	return a
 }
 
+func (a *MetricMiddleware) WithStatusIgnore(conf StatusConfig) *MetricMiddleware {
+	if conf != nil {
+		statusIgnored := conf.StatusIgnored()
+		if len(statusIgnored) > 0 {
+			a.statusIgnoreMap = statusIgnored
+		}
+	}
+	return a
+}
+
 func (a *MetricMiddleware) Middleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 			next.ServeHTTP(ww, r)
-			if !a.isIgnorePath(r.URL.Path) {
-				u_prometheus.MetricIncomingHttpRequest.
-					WithLabelValues(fmt.Sprintf("%d", ww.Status()), r.Method, a.cleanUpPath(r.URL.Path)).
-					Observe(time.Since(start).Seconds())
+			if a.isIgnorePath(r.URL.Path) || a.isIgnoreStatus(ww.Status()) {
+				return
 			}
+
+			u_prometheus.MetricIncomingHttpRequest.
+				WithLabelValues(fmt.Sprintf("%d", ww.Status()), r.Method, a.cleanUpPath(r.URL.Path)).
+				Observe(time.Since(start).Seconds())
 		}
 		return http.HandlerFunc(fn)
 	}
@@ -70,5 +84,10 @@ func (a *MetricMiddleware) cleanUpPath(path string) string {
 
 func (a *MetricMiddleware) isIgnorePath(path string) bool {
 	_, ok := a.pathIgnoredMap[path]
+	return ok
+}
+
+func (a *MetricMiddleware) isIgnoreStatus(status int) bool {
+	_, ok := a.statusIgnoreMap[status]
 	return ok
 }
