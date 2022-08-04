@@ -63,6 +63,10 @@ func (a *MetricMiddleware) isIgnorePath(path string) bool {
 }
 
 func (a *MetricMiddleware) isIgnoreStatus(status int) bool {
+	if a.prometheusHttpConfig == nil {
+		return false
+	}
+
 	_, ok := a.prometheusHttpConfig.StatusIgnoredMap[status]
 	return ok
 }
