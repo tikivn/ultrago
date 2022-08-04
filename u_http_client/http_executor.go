@@ -11,11 +11,28 @@ import (
 	"github.com/tikivn/ultrago/u_prometheus"
 )
 
-func NewHttpExecutor() HttpExecutor {
+func NewDefaultHttpExecutor() HttpExecutor {
 	return &httpExecutor{}
 }
 
-type httpExecutor struct{}
+func NewHttpExecutor() HttpExecutor {
+	return &httpExecutor{
+		prometheusHttpConfig: u_prometheus.NewDefaultOutgoingHttpConfig(),
+	}
+}
+
+type httpExecutor struct {
+	prometheusHttpConfig *u_prometheus.HttpConfig
+}
+
+func (a *httpExecutor) WithPrometheusHttpConfig(conf *u_prometheus.HttpConfig) HttpExecutor {
+	if conf == nil {
+		return a
+	}
+
+	a.prometheusHttpConfig.WithHttpConfig(*conf)
+	return a
+}
 
 func (c *httpExecutor) Execute(r *http.Request, timeout time.Duration, retry uint64) (int, []byte, error) {
 	ctx, logger := u_logger.GetLogger(r.Context())
@@ -40,7 +57,7 @@ func (c *httpExecutor) Execute(r *http.Request, timeout time.Duration, retry uin
 		}()
 
 		u_prometheus.MetricOutgoingHttpRequest.
-			WithLabelValues(fmt.Sprintf("%d", httpRes.StatusCode), r.Method, r.URL.Path, r.URL.Host).
+			WithLabelValues(fmt.Sprintf("%d", httpRes.StatusCode), r.Method, c.cleanUpPath(r.URL.Path), r.URL.Host).
 			Observe(time.Since(start).Seconds())
 
 		res, err = ioutil.ReadAll(httpRes.Body)
@@ -57,4 +74,15 @@ func (c *httpExecutor) Execute(r *http.Request, timeout time.Duration, retry uin
 		return statusCode, nil, err
 	}
 	return statusCode, res, nil
+}
+
+func (c *httpExecutor) cleanUpPath(path string) string {
+	if c.prometheusHttpConfig == nil {
+		return path
+	}
+
+	for regex, alt := range c.prometheusHttpConfig.PathCleanUpMap {
+		path = regex.ReplaceAllString(path, alt)
+	}
+	return path
 }
