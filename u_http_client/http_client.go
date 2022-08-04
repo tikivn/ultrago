@@ -18,14 +18,6 @@ import (
 	"moul.io/http2curl"
 )
 
-func NewDefaultHttpClient(timeout time.Duration) *HttpClient {
-	return NewHttpClient(NewHttpExecutor(), timeout)
-}
-
-func NewDefaultRetryHttpClient(timeout time.Duration, retry uint64) *HttpClient {
-	return NewRetryHttpClient(NewHttpExecutor(), timeout, retry)
-}
-
 func NewHttpClient(httpExecutor HttpExecutor, timeout time.Duration) *HttpClient {
 	return &HttpClient{
 		retry:        0,

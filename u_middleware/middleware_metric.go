@@ -3,7 +3,6 @@ package u_middleware
 import (
 	"fmt"
 	"net/http"
-	"regexp"
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
@@ -12,48 +11,20 @@ import (
 
 func NewMetricMiddleware() *MetricMiddleware {
 	return &MetricMiddleware{
-		pathCleanUpMap: map[*regexp.Regexp]string{
-			regexp.MustCompile("\\/([0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12})\\/"): "/<id>/",
-			regexp.MustCompile("\\/([0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12})"):    "/<id>",
-		},
-		pathIgnoredMap: map[string]bool{
-			"/":            true,
-			"/healthcheck": true,
-			"/heartbeat":   true,
-			"/metrics":     true,
-		},
-		statusIgnoreMap: make(map[int]bool, 0),
+		prometheusHttpConfig: u_prometheus.NewDefaultIncomingHttpConfig(),
 	}
 }
 
 type MetricMiddleware struct {
-	pathCleanUpMap  map[*regexp.Regexp]string
-	pathIgnoredMap  map[string]bool
-	statusIgnoreMap map[int]bool
+	prometheusHttpConfig *u_prometheus.HttpConfig
 }
 
-func (a *MetricMiddleware) WithPathConfig(conf PathConfig) *MetricMiddleware {
-	if conf != nil {
-		pathCleanUp := conf.PathCleanUp()
-		if len(pathCleanUp) > 0 {
-			a.pathCleanUpMap = pathCleanUp
-		}
-
-		pathIgnored := conf.PathIgnored()
-		if len(pathIgnored) > 0 {
-			a.pathIgnoredMap = pathIgnored
-		}
+func (a *MetricMiddleware) WithPrometheusHttpConfig(conf *u_prometheus.HttpConfig) *MetricMiddleware {
+	if conf == nil {
+		return a
 	}
-	return a
-}
 
-func (a *MetricMiddleware) WithStatusIgnore(conf StatusConfig) *MetricMiddleware {
-	if conf != nil {
-		statusIgnored := conf.StatusIgnored()
-		if len(statusIgnored) > 0 {
-			a.statusIgnoreMap = statusIgnored
-		}
-	}
+	a.prometheusHttpConfig.WithHttpConfig(*conf)
 	return a
 }
 
@@ -76,18 +47,26 @@ func (a *MetricMiddleware) Middleware() func(http.Handler) http.Handler {
 }
 
 func (a *MetricMiddleware) cleanUpPath(path string) string {
-	for regex, alt := range a.pathCleanUpMap {
+	for regex, alt := range a.prometheusHttpConfig.PathCleanUpMap {
 		path = regex.ReplaceAllString(path, alt)
 	}
 	return path
 }
 
 func (a *MetricMiddleware) isIgnorePath(path string) bool {
-	_, ok := a.pathIgnoredMap[path]
+	if a.prometheusHttpConfig == nil {
+		return false
+	}
+
+	_, ok := a.prometheusHttpConfig.PathIgnoredMap[path]
 	return ok
 }
 
 func (a *MetricMiddleware) isIgnoreStatus(status int) bool {
-	_, ok := a.statusIgnoreMap[status]
+	if a.prometheusHttpConfig == nil {
+		return false
+	}
+
+	_, ok := a.prometheusHttpConfig.StatusIgnoredMap[status]
 	return ok
 }

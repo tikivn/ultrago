@@ -6,6 +6,7 @@ import (
 
 	http_client "github.com/tikivn/ultrago/u_http_client"
 	"github.com/tikivn/ultrago/u_logger"
+	"github.com/tikivn/ultrago/u_prometheus"
 	"moul.io/http2curl"
 )
 
@@ -44,4 +45,8 @@ func (svc *mockHttpExecutor) Execute(r *http.Request, timeout time.Duration, ret
 		logger.Infof("execute request with timeout = %s and retry = %d with curl:\n%s", timeout.String(), retry, command)
 	}
 	return http.StatusOK, svc.res[r.URL.Path], svc.err[r.URL.Path]
+}
+
+func (a *mockHttpExecutor) WithPrometheusHttpConfig(conf *u_prometheus.HttpConfig) http_client.HttpExecutor {
+	return a
 }
