@@ -11,10 +11,6 @@ import (
 	"github.com/tikivn/ultrago/u_prometheus"
 )
 
-func NewDefaultHttpExecutor() HttpExecutor {
-	return &httpExecutor{}
-}
-
 func NewHttpExecutor() HttpExecutor {
 	return &httpExecutor{
 		prometheusHttpConfig: u_prometheus.NewDefaultOutgoingHttpConfig(),
