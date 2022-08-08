@@ -34,7 +34,7 @@ func (a *MetricMiddleware) Middleware() func(http.Handler) http.Handler {
 			start := time.Now()
 			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 			next.ServeHTTP(ww, r)
-			if a.isIgnorePath(r.URL.Path) || a.isIgnoreStatus(ww.Status()) {
+			if a.isIgnorePath(r.URL.Path) || a.isIgnoreStatus(ww.Status()) || a.isIgnoreMethod(r.Method) {
 				return
 			}
 
@@ -68,5 +68,14 @@ func (a *MetricMiddleware) isIgnoreStatus(status int) bool {
 	}
 
 	_, ok := a.prometheusHttpConfig.StatusIgnoredMap[status]
+	return ok
+}
+
+func (a *MetricMiddleware) isIgnoreMethod(method string) bool {
+	if a.prometheusHttpConfig == nil {
+		return false
+	}
+
+	_, ok := a.prometheusHttpConfig.MethodIgnoreMap[method]
 	return ok
 }

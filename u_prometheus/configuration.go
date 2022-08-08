@@ -1,6 +1,9 @@
 package u_prometheus
 
-import "regexp"
+import (
+	"net/http"
+	"regexp"
+)
 
 func NewDefaultIncomingHttpConfig() *HttpConfig {
 	return &HttpConfig{
@@ -15,6 +18,9 @@ func NewDefaultIncomingHttpConfig() *HttpConfig {
 			"/metrics":     true,
 		},
 		StatusIgnoredMap: make(map[int]bool, 0),
+		MethodIgnoreMap: map[string]bool{
+			http.MethodOptions: true,
+		},
 	}
 }
 
@@ -26,6 +32,7 @@ func NewDefaultOutgoingHttpConfig() *HttpConfig {
 		},
 		PathIgnoredMap:   make(map[string]bool, 0),
 		StatusIgnoredMap: make(map[int]bool, 0),
+		MethodIgnoreMap:  make(map[string]bool, 0),
 	}
 }
 
@@ -33,11 +40,13 @@ func NewHttpConfig(
 	pathCleanUpMap map[*regexp.Regexp]string,
 	pathIgnoredMap map[string]bool,
 	statusIgnoredMap map[int]bool,
+	methodIgnoredMap map[string]bool,
 ) *HttpConfig {
 	return &HttpConfig{
 		PathCleanUpMap:   pathCleanUpMap,
 		PathIgnoredMap:   pathIgnoredMap,
 		StatusIgnoredMap: statusIgnoredMap,
+		MethodIgnoreMap:  methodIgnoredMap,
 	}
 }
 
@@ -46,6 +55,7 @@ func NewEmptyHttpConfig() *HttpConfig {
 		PathCleanUpMap:   make(map[*regexp.Regexp]string, 0),
 		PathIgnoredMap:   make(map[string]bool, 0),
 		StatusIgnoredMap: make(map[int]bool, 0),
+		MethodIgnoreMap:  make(map[string]bool, 0),
 	}
 }
 
@@ -53,12 +63,14 @@ type HttpConfig struct {
 	PathCleanUpMap   map[*regexp.Regexp]string
 	PathIgnoredMap   map[string]bool
 	StatusIgnoredMap map[int]bool
+	MethodIgnoreMap  map[string]bool
 }
 
 func (c *HttpConfig) WithHttpConfig(conf HttpConfig) *HttpConfig {
 	c.WithPathCleanUp(conf.PathCleanUpMap)
 	c.WithPathIgnored(conf.PathIgnoredMap)
 	c.WithStatusIgnored(conf.StatusIgnoredMap)
+	c.WithMethodIgnored(conf.MethodIgnoreMap)
 	return c
 }
 
@@ -88,6 +100,16 @@ func (c *HttpConfig) WithStatusIgnored(statusIgnoredMap map[int]bool) *HttpConfi
 	}
 	for key, value := range statusIgnoredMap {
 		c.StatusIgnoredMap[key] = value
+	}
+	return c
+}
+
+func (c *HttpConfig) WithMethodIgnored(methodIgnoredMap map[string]bool) *HttpConfig {
+	if c.MethodIgnoreMap == nil {
+		c.MethodIgnoreMap = make(map[string]bool, 0)
+	}
+	for key, value := range methodIgnoredMap {
+		c.MethodIgnoreMap[key] = value
 	}
 	return c
 }
