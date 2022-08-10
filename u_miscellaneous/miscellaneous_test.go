@@ -8,6 +8,20 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 )
 
+func TestContains(t *testing.T) {
+	convey.Convey("TestContains", t, func() {
+		convey.Convey("String slice", func() {
+			checked1 := Contains[string]([]string{"a", "b", "c"}, "a")
+			convey.So(checked1, convey.ShouldBeTrue)
+		})
+
+		convey.Convey("Int slice", func() {
+			checked2 := Contains[int]([]int{1, 2, 3}, 3)
+			convey.So(checked2, convey.ShouldBeTrue)
+		})
+	})
+}
+
 func TestUUID2UInt(t *testing.T) {
 	convey.Convey("TestUUID2UInt", t, func() {
 		existed := make(map[uint64]bool, 0)

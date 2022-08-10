@@ -2,10 +2,11 @@ package u_context
 
 import "context"
 
-func Get[K any](ctx context.Context, key string) K {
-	return ctx.Value(key).(K)
+func Get[Value any](ctx context.Context, key string) (Value, bool) {
+	v, ok := ctx.Value(key).(Value)
+	return v, ok
 }
 
-func Set[K any](ctx context.Context, key string, value K) context.Context {
+func Set[Value any](ctx context.Context, key string, value Value) context.Context {
 	return context.WithValue(ctx, key, value)
 }

@@ -37,6 +37,15 @@ func Copy(dst interface{}, src interface{}) error {
 	return nil
 }
 
+func Contains[T comparable](arr []T, str T) bool {
+	for _, a := range arr {
+		if a == str {
+			return true
+		}
+	}
+	return false
+}
+
 // Abbreviate accept not correct in some cases
 func Abbreviate(str string, maxLength int) string {
 	if len(str) <= maxLength {
