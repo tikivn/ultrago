@@ -38,7 +38,7 @@ func init() {
 	}
 }
 
-func initCustomSlack(slackWebHook string) {
+func InitCustomSlack(slackWebHook string) {
 	slackOnce.Do(func() {
 		slackIns = &slack{
 			webhookURL: slackWebHook,
