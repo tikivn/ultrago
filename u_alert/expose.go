@@ -1,6 +1,7 @@
 package u_alert
 
 import (
+	"strings"
 	"sync"
 
 	"github.com/tikivn/ultrago/u_env"
@@ -38,12 +39,23 @@ func init() {
 	}
 }
 
-func initCustomSlack(slackWebHook string) {
-	slackOnce.Do(func() {
-		slackIns = &slack{
-			webhookURL: slackWebHook,
-		}
-	})
+func InitCustomEnvVar(slackWebHook string, telegramBotToken string, telegramChannels string) {
+	if slackWebHook != "" {
+		slackOnce.Do(func() {
+			slackIns = &slack{
+				webhookURL: slackWebHook,
+			}
+		})
+	}
+
+	if telegramBotToken != "" && strings.TrimSpace(telegramChannels) != "" {
+		telegramOnce.Do(func() {
+			telegramIns = &telegram{
+				token:    telegramBotToken,
+				channels: strings.Split(telegramChannels, ","),
+			}
+		})
+	}
 }
 
 func Slack() *slack {
