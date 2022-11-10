@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/cenkalti/backoff/v4 v4.1.1
 	github.com/flosch/pongo2 v0.0.0-20200913210552-0d938eb266f3
-	github.com/go-chi/chi/v5 v5.0.4
+	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-playground/validator/v10 v10.9.0
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/google/uuid v1.3.0
@@ -20,9 +20,17 @@ require (
 )
 
 require (
+	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/rs/zerolog v1.27.0 // indirect
+)
+
+require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/go-chi/chi v1.5.4
+	github.com/go-chi/httplog v0.2.5
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
@@ -38,7 +46,7 @@ require (
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
-	golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069 // indirect
+	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 	golang.org/x/text v0.3.6 // indirect
 	google.golang.org/protobuf v1.26.0-rc.1 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
