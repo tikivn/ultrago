@@ -1,9 +1,9 @@
 module github.com/tikivn/ultrago
 
-go 1.19
+go 1.20
 
 require (
-	github.com/cenkalti/backoff/v4 v4.1.1
+	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/flosch/pongo2 v0.0.0-20200913210552-0d938eb266f3
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-playground/validator/v10 v10.9.0
@@ -20,6 +20,9 @@ require (
 )
 
 require (
+	github.com/Masterminds/semver/v3 v3.2.1 // indirect
+	github.com/hedzr/lb v0.5.0 // indirect
+	github.com/hlts2/round-robin v0.0.0-20211119053418-5ea74e1f7bfc // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/rs/zerolog v1.27.0 // indirect

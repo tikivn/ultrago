@@ -6,7 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"os"
+	"regexp"
 )
+
+var removeSpecialCharsRegex = regexp.MustCompile(`[^a-zA-Z0-9()@:%_\+.~#?&//=\- ]+`)
 
 func CountCharacterInStr(input string, character string) int {
 	count := 0
@@ -65,4 +69,16 @@ func UUID2UInt(uid string) (uint64, error) {
 		return 0, fmt.Errorf("cast %s to uint64 failed", uid)
 	}
 	return bi.Uint64(), nil
+}
+
+func RemoveSpecialChars(str string) string {
+	return removeSpecialCharsRegex.ReplaceAllString(str, "")
+}
+
+func FileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
