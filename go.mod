@@ -9,6 +9,8 @@ require (
 	github.com/go-playground/validator/v10 v10.9.0
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/google/uuid v1.3.0
+	github.com/hedzr/lb v0.5.0
+	github.com/hlts2/round-robin v0.0.0-20211119053418-5ea74e1f7bfc
 	github.com/prometheus/client_golang v1.11.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/slack-go/slack v0.10.0
@@ -21,8 +23,6 @@ require (
 
 require (
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
-	github.com/hedzr/lb v0.5.0 // indirect
-	github.com/hlts2/round-robin v0.0.0-20211119053418-5ea74e1f7bfc // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/rs/zerolog v1.27.0 // indirect
@@ -52,5 +52,5 @@ require (
 	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
 	golang.org/x/text v0.3.8 // indirect
 	google.golang.org/protobuf v1.26.0-rc.1 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.0 // indirect
 )
